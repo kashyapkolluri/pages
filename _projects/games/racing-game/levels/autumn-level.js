@@ -40,7 +40,7 @@ class GameLevelAutumn {
         src: path + '/images/projects/racing-game/Directions_blue_car.png',
         SCALE_FACTOR: 10,
         STEP_FACTOR: 1100,
-        INIT_POSITION: {x: 340 / 740, y: 500 / 585},
+        INIT_POSITION: {x: 340 / 740 - 0.08, y: 500 / 585}, // start behind the red car so they don't overlap
         pixels: { height: 1024, width: 1536 },
         orientation: { rows: 4, columns: 4 },
         up:        { row: 3, start: 0, columns: 1 },
@@ -82,6 +82,13 @@ class GameLevelAutumn {
     };
 
 
+    // Finish line on the painted start/finish line; HUD in the trees above the top-left corner.
+    const lap_data = {
+      totalLaps: 3,
+      finishLine: { x: 0.453, top: 0.794, bottom: 0.941 },
+      hudPosition: { x: 0.01, y: 0.02 }
+    };
+
     this.classes = [
       { class: GameEnvBackground, data: background_data },
       { class: Player, data: player_data },
@@ -89,7 +96,7 @@ class GameLevelAutumn {
       { class: SplineBarrier, data: barrierData1 },
       { class: SplineBarrier, data: barrierData2 },
       { class: Character, data: BoxData },
-      { class: TimeLapScreen, data: { currentLap: 1, totalLaps: 3, } }
+      { class: TimeLapScreen, data: lap_data }
     ];
   }
 }

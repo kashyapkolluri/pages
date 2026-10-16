@@ -1,8 +1,28 @@
 import GameEnvBackground from '@assets/js/GameEnginev1.1/essentials/GameEnvBackground.js';
 import Player from '@assets/js/GameEnginev1.1/essentials/Player.js';
 import SplineBarrier from '@assets/js/GameEnginev1.1/essentials/SplineBarrier.js';
+import Npc from '@assets/js/GameEnginev1.1/essentials/Npc.js';
 import TimeLapScreen from './TimeLapScreen.js';
 
+
+// Npc only talks while a player is touching it; the yeti talks whenever E is pressed.
+// Each press shows the next line, and the press after the last line closes the dialogue.
+class Yeti extends Npc {
+  handleKeyInteract() {
+    if (this.gameEnv.gameControl && this.gameEnv.gameControl.isPaused) {
+      return;
+    }
+    const lines = this.spriteData.dialogues;
+    // A closed dialogue (including one closed with Escape) always restarts from the first line.
+    const nextIndex = this.dialogueSystem.isDialogueOpen() ? this.lineIndex + 1 : 0;
+    if (nextIndex >= lines.length) {
+      this.dialogueSystem.closeDialogue();
+      return;
+    }
+    this.lineIndex = nextIndex;
+    this.dialogueSystem.showDialogue(lines[nextIndex], this.spriteData.id, this.spriteData.src, this.spriteData);
+  }
+}
 
 class GameLevelWinter {
   constructor(gameEnv) {
@@ -73,13 +93,20 @@ class GameLevelWinter {
     };
 
 
+    // Finish line on the painted start/finish line; HUD in the trees above the top-left corner.
+    const lap_data = {
+      totalLaps: 3,
+      finishLine: { x: 0.5, top: 0.764, bottom: 0.864 },
+      hudPosition: { x: 0.01, y: 0.02 }
+    };
+
     this.classes = [
       { class: GameEnvBackground, data: background_data },
       { class: Player, data: player_data },
       { class: Player, data: player2_data },
       { class: SplineBarrier, data: barrierData1 },
       { class: SplineBarrier, data: barrierData2 },
-      { class: TimeLapScreen, data: { currentLap: 1, totalLaps: 3 } }
+      { class: TimeLapScreen, data: lap_data }
     ];
   }
 }

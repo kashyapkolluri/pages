@@ -27,6 +27,11 @@ rp_active: overview
     <p class="ocs__description">{{ data.Description }}</p>
   </div>
 
+  <figure class="jv-figure">
+    <img src="{{ '/images/jarvis/jarvis3000-overview-image.png' | relative_url }}" alt="How Jarvis3000 works: classroom cameras observe the room, Jarvis detects objects, and the system reports objects that moved" width="1774" height="887">
+    <figcaption>Jarvis3000 observes classroom objects over time and highlights changes in their location.</figcaption>
+  </figure>
+
   <!-- System flow at a glance -->
   <div class="jv-flow">
     <div class="jv-flow-node">
@@ -85,7 +90,7 @@ rp_active: overview
     <p class="jv-question">Can a time-aware multi-camera system using object detection, segmentation, tracking, and schedule data reliably identify expected classroom objects and people and detect anomalies in their status, presence, or location?</p>
   </div>
 
-  <!-- Hardware Layout -->
+  <!--  Layout -->
   <h2 class="ocs__section-title">Hardware Layout</h2>
   <div class="ocs__card">
     <div class="jv-flow-row">
@@ -123,6 +128,17 @@ rp_active: overview
         <span class="jv-flow-node-sub">Capture only, planned</span>
       </div>
     </div>
+    <div class="jv-flow-row">
+      <div class="jv-flow-node">
+        <span class="jv-flow-node-label">Main Linux Computer</span>
+        <span class="jv-flow-node-sub">Audio output</span>
+      </div>
+      <span class="jv-flow-arrow">→</span>
+      <div class="jv-flow-node">
+        <span class="jv-flow-node-label">Ultimate Ears WONDERBOOM</span>
+        <span class="jv-flow-node-sub">Classroom speaker</span>
+      </div>
+    </div>
   </div>
 
   <!-- Project Phases -->
@@ -144,17 +160,17 @@ Nov 2026"]
     </div>
     <div class="ocs__hub-grid" style="margin-top:1.25rem;">
       <div class="ocs__hub-card">
-        <span class="ocs__status-pill ocs__status-pill--good" style="width:fit-content;margin-bottom:0.6rem;">In Progress</span>
+        <span class="ocs__status-pill ocs__status-pill--good" style="width:fit-content;margin-bottom:0.6rem;">Done</span>
         <span class="ocs__hub-card-title">Phase 1: Camera Research &amp; Capture Foundations</span>
         <p>Test and calibrate the existing Logitech BRIO + Linux capture pipeline, benchmark FFmpeg/OpenCV at the 10-second capture interval, and begin collecting classroom images for the six core object classes.</p>
       </div>
       <div class="ocs__hub-card">
-        <span class="ocs__status-pill ocs__status-pill--warn" style="width:fit-content;margin-bottom:0.6rem;">Planned</span>
+        <span class="ocs__status-pill ocs__status-pill--warn" style="width:fit-content;margin-bottom:0.6rem;">Done</span>
         <span class="ocs__hub-card-title">Phase 2: Object Recognition &amp; Segmentation</span>
         <p>Annotate the dataset, train and evaluate an object-detection model on the six core classroom classes, and integrate SAM 3 segmentation, targeting the 80% classification threshold on held-out images.</p>
       </div>
       <div class="ocs__hub-card">
-        <span class="ocs__status-pill ocs__status-pill--neutral" style="width:fit-content;margin-bottom:0.6rem;">Planned</span>
+        <span class="ocs__status-pill ocs__status-pill--neutral" style="width:fit-content;margin-bottom:0.6rem;">In Progress</span>
         <span class="ocs__hub-card-title">Phase 3: Multi-Camera Tracking &amp; Room Model</span>
         <p>Bring the second camera and Linux node online, implement multi-camera matching and the object observation state machine, and validate the room model against the 80% object-state accuracy target.</p>
       </div>

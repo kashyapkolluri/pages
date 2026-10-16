@@ -5,33 +5,37 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const filename = path.join(root, "_projects/lessons/csa1/notebooks/2024-10-29-sprint3_plan.ipynb");
-const notebook = JSON.parse(fs.readFileSync(filename, "utf8"));
-const text = notebook.cells.map(cell => cell.source.join("")).join("\n");
-const metadata = notebook.cells[0].source.join("");
+const filename = path.join(root, "_projects/systems/courses/data/sprint-intro/csa-sprint-3.md");
+const source = fs.readFileSync(filename, "utf8");
+const text = source.replace(/\s+/g, " ");
 
-test("restored CSA objectives retain their route and belong to CSA1 week 9", () => {
-    assert.equal(notebook.nbformat, 4);
-    assert.ok(notebook.cells.every(cell => cell.cell_type === "markdown"));
-    assert.match(metadata, /^lesson_group: csa1$/m);
-    assert.match(metadata, /^courses: \{csa: \{week: 9\}\}$/m);
-    assert.match(metadata, /^permalink: \/csa\/sprint3\/objectives$/m);
-    assert.doesNotMatch(metadata, /^articulation:|csse/m);
+test("CSA capstone planning is a sprint intro rather than a week-nine notebook", () => {
+    assert.match(source, /^## Trimester Final Evaluation/m);
+    assert.doesNotMatch(source, /^courses:|^permalink:/m);
+    assert.equal(fs.existsSync(path.join(root, "_projects/lessons/csa1/notebooks/2026-10-11-sprint3_plan.ipynb")), false);
+    const outline = fs.readFileSync(path.join(root, "_projects/systems/courses/data/csa.yml"), "utf8");
+    assert.match(outline, /direction_include: projects\/courses\/sprint-intro\/csa-sprint-3\.md/);
+    const redirect = fs.readFileSync(path.join(root, "_projects/lessons/csa1/docs/2026-10-16-sprint3-objectives-redirect.md"), "utf8");
+    assert.match(redirect, /^permalink: \/csa\/sprint3\/objectives$/m);
+    assert.match(redirect, /\/csa\/sprint-3\//);
+    assert.doesNotMatch(redirect, /^courses:/m);
 });
 
 test("capstone objectives connect three trimesters without claiming advanced mastery", () => {
     for (const phrase of [
         "CSA1 - Trimester 1", "CSA2 - Trimester 2", "DS2 - Trimester 3",
-        "POJO, JPA, and APIs were introduced in week 4",
+        "POJO, JPA, and API foundations already introduced",
         "Not every student is expected to complete every advanced CS113 layer",
         "does not by itself demonstrate a CS113 algorithm or data structure",
         "normal, boundary, and failure cases", "integration pull request",
-        "not as a new week-9 deadline"
+        "not an additional Sprint 3 submission",
+        "Formal CS112/CS113 curriculum alignment begins in Sprint 4",
+        "does not mean every advanced CS113 topic is introduced or completed in Sprint 4"
     ]) assert.ok(text.includes(phrase), phrase);
     for (const route of [
         "/capstone/toolchain-trail/", "/capstone/ocs-admin-security/", "/capstone/submissions/",
         "/csa/csa2/", "/csa/cs112/", "/csa/cs113/", "/navigation/java-reference/"
-    ]) assert.ok(text.includes(`{{site.baseurl}}${route}`), route);
+    ]) assert.ok(text.includes(`{{ site.baseurl }}${route}`), route);
     assert.doesNotMatch(text, /(?<!\{)\{site\.baseurl\}\}/);
 });
 
@@ -60,7 +64,7 @@ test("sprint descriptions connect week-eight preparation to sustained capstones 
         assert.match(sprint(number), /two mentor reviews and a community N@tM presentation/);
         assert.match(sprint(number), /continues throughout the year/);
     }
-    assert.match(text, /Before CSA2 begins in week 13/);
+    assert.match(text, /Before beginning Sprint 4/);
     assert.match(text, /two mentor reviews and a community N@tM presentation/);
     assert.match(text, /how it is made/);
     assert.match(text, /feedback received, and the changes made or planned/);
@@ -86,9 +90,11 @@ test("week twelve reflects on system and curriculum evidence without adding new 
     assert.match(outline, /  12:\n    theme: "System Contributions, Curriculum Connections, and Retrospective"/);
     assert.match(checkpoint, /one future learning topic/);
     assert.match(checkpoint, /up to two other teammates/);
-    assert.match(checkpoint, /one to three students total/);
+    assert.match(checkpoint, /Work individually/);
     assert.match(checkpoint, /each person's proposed teaching or development contribution/);
     assert.match(checkpoint, /Bring the proposal to teacher review/);
     assert.match(checkpoint, /not completing a new lesson, CodeRunner submission, or system implementation/);
     assert.match(outline, /Propose One Future Teaching Topic Individually or with Up to Two Teammates/);
+    assert.match(checkpoint, /url: \/csa\/sprint-3\//);
+    assert.doesNotMatch(checkpoint, /url: \/csa\/sprint3\/objectives/);
 });

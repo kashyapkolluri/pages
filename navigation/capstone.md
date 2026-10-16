@@ -25,6 +25,7 @@ show_reading_time: false
       <select id="year-select" class="nc-select" aria-label="Filter projects by school year" style="max-width: 14rem;">
         <option value="2026-2027" selected>2026/2027</option>
         <option value="2025-2026">2025/2026</option>
+        <option value="">All years</option>
       </select>
     </div>
   </div>
@@ -33,7 +34,7 @@ show_reading_time: false
 <div class="ocs__grid">
   <div class="ocs__grid-cell">
     <input id="project-search" type="search" placeholder="Search projects, descriptions, or team members" class="nc-input" />
-    <p id="search-status" class="text-xs text-gray-500" style="margin: 0.25rem 0 0;">Showing all projects.</p>
+    <p id="search-status" role="status" class="text-xs text-gray-500" style="margin: 0.25rem 0 0;">Showing all projects.</p>
   </div>
 </div>
 
@@ -118,33 +119,114 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   };
 
-  function normalize(text){ return text.toLowerCase().trim(); }
+  function fold(text){ return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+  function normalize(text){ return fold(text).trim(); }
+  // Read each card's text once, before the links button and pop-up are added to it.
+  const cardText = new Map(cards.map(card=>[card, normalize(card.textContent)]));
   function matchesType(card){ return currentType === 'all' || card.classList.contains(currentType); }
   function matchesYear(card){ return !currentYear || (card.dataset.year || '2025-2026') === currentYear; }
   function matchesSearch(card){
-    const text = normalize(card.textContent);
-    return !currentQuery || text.includes(currentQuery);
+    // Every word has to be in the card, in any order: "veterans chatbot" finds Poway Veterans.
+    return currentQuery.split(/\s+/).every(word=>cardText.get(card).includes(word));
+  }
+  // Highlight each search word in the card's own text with <mark>, like the Topics page.
+  const markSkip = '.capstone-links-button, .capstone-popup, .capstone-card-placeholder';
+  function clearMarks(card){
+    card.querySelectorAll('mark[data-search-mark]').forEach(mark=>{
+      const parent = mark.parentNode;
+      mark.replaceWith(mark.textContent);
+      parent.normalize();
+    });
+  }
+  function markWords(card, words){
+    const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while(walker.nextNode()){
+      if(!walker.currentNode.parentElement.closest(markSkip)) nodes.push(walker.currentNode);
+    }
+    nodes.forEach(node=>{
+      const text = node.data;
+      // Fold one character at a time and remember where each folded character came from.
+      let folded = '';
+      const from = [];
+      for(let i = 0; i < text.length; i++){
+        const piece = fold(text[i]);
+        folded += piece;
+        for(let k = 0; k < piece.length; k++) from.push(i);
+      }
+      const ranges = [];
+      words.forEach(word=>{
+        for(let at = folded.indexOf(word); at !== -1; at = folded.indexOf(word, at + 1)){
+          let end = from[at + word.length - 1] + 1;
+          while(end < text.length && !fold(text[end])) end++;
+          ranges.push([from[at], end]);
+        }
+      });
+      if(!ranges.length) return;
+      ranges.sort((a, b)=>a[0] - b[0]);
+      const merged = [];
+      ranges.forEach(([start, end])=>{
+        const last = merged[merged.length - 1];
+        if(last && start <= last[1]) last[1] = Math.max(last[1], end);
+        else merged.push([start, end]);
+      });
+      const pieces = [];
+      let cursor = 0;
+      merged.forEach(([start, end])=>{
+        if(start > cursor) pieces.push(text.slice(cursor, start));
+        const mark = document.createElement('mark');
+        mark.dataset.searchMark = '';
+        mark.textContent = text.slice(start, end);
+        pieces.push(mark);
+        cursor = end;
+      });
+      if(cursor < text.length) pieces.push(text.slice(cursor));
+      node.replaceWith(...pieces);
+    });
   }
   
-  function updateStatus(count){
-  const total = getTotalProjects();
-
-  if(currentQuery){
-    status.textContent = count
-      ? `${count} of ${total} project${total === 1 ? '' : 's'} found for "${currentQuery}".`
-      : `No projects match "${currentQuery}".`;
-  } else {
-    status.textContent = `${total} total project${total === 1 ? '' : 's'}.`;
+  function plural(count, word){ return `${count} ${word}${count === 1 ? '' : 's'}`; }
+  function filterLabel(){
+    const parts = [];
+    if(currentType !== 'all') parts.push(currentType);
+    if(currentYear) parts.push(yearSelect.selectedOptions[0].textContent);
+    return parts.join(', ');
   }
-}
+  function updateStatus(count){
+    const total = getTotalProjects();
+    const label = filterLabel();
+    if(!currentQuery){
+      if(!label) status.textContent = `${plural(total, 'project')}.`;
+      else if(count) status.textContent = `Showing ${count} of ${plural(total, 'project')} (${label}).`;
+      else status.textContent = `No projects in ${label}.`;
+      return;
+    }
+    const query = searchInput.value.trim().replace(/\s+/g, ' ');
+    const where = label ? ` in ${label}` : '';
+    let text = count
+      ? `${plural(count, 'project')} ${count === 1 ? 'matches' : 'match'} "${query}"${where}.`
+      : `No projects match "${query}"${where}.`;
+    // Say when the course or year choice hides matches, so a project never looks missing.
+    const hidden = cards.filter(matchesSearch).length - count;
+    if(hidden){
+      const both = currentType !== 'all' && currentYear;
+      const other = both ? 'other courses or years' : currentYear ? 'other years' : 'other courses';
+      const pick = currentType === 'all' ? 'pick All years' : 'pick All';
+      text += ` ${hidden} ${count ? 'more' : hidden === 1 ? 'match' : 'matches'} in ${other}: ${pick}.`;
+    }
+    status.textContent = text;
+  }
   function getTotalProjects(){
   return cards.length;
 }
   function applyFilters(){
     let count = 0;
+    const words = currentQuery.split(/\s+/).filter(Boolean);
     cards.forEach(card=>{
       const visible = matchesType(card) && matchesSearch(card) && matchesYear(card);
       card.style.display = visible ? '' : 'none';
+      clearMarks(card);
+      if(visible && words.length) markWords(card, words);
       if(visible) count++;
     });
     updateStatus(count);
@@ -163,7 +245,12 @@ document.addEventListener('DOMContentLoaded', function(){
     updateTypeButtons();
     applyFilters();
   }
-  document.getElementById('show-all')?.addEventListener('click', ()=> setTypeFilter('all'));
+  // All shows every project: it clears the year too, not just the course.
+  document.getElementById('show-all')?.addEventListener('click', ()=>{
+    if(yearSelect) yearSelect.value = '';
+    currentYear = '';
+    setTypeFilter('all');
+  });
   document.getElementById('show-csa')?.addEventListener('click', ()=> setTypeFilter('CSA'));
   document.getElementById('show-csp')?.addEventListener('click', ()=> setTypeFilter('CSP'));
   document.getElementById('show-csh')?.addEventListener('click', ()=> setTypeFilter('CSH'));
@@ -254,6 +341,15 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   updateTypeButtons();
   applyFilters();
+  // After Back, a browser can refill the search box and year menu once this script has run.
+  window.addEventListener('pageshow', ()=>{
+    const query = normalize(searchInput.value);
+    const year = yearSelect ? yearSelect.value : '';
+    if(query === currentQuery && year === currentYear) return;
+    currentQuery = query;
+    currentYear = year;
+    applyFilters();
+  });
 });
 </script>
 

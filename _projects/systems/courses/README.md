@@ -37,10 +37,50 @@ added there and their generated paths ignored in the root `.gitignore`.
 
 Blogs owns `layouts/post.html`. Its course branch delegates to the Courses-owned
 player include; conventional documents render without that adapter. Courses'
-Blogs page delegates to Blogs' reusable reader. Both systems preserve the
+Blogs page delegates to Blogs' reusable reader with `course=` and `search=true`,
+so it lists only posts whose `courses` names that course alone (the rule the
+player uses for its own lessons) under a search bar. Both systems preserve the
 existing runtime paths and are always-on `:dev` projects.
 
 ## Build and development
+
+### Optional sprint introductions
+
+Add `direction_include` to a course's sprint in `data/<course>.yml`:
+
+```yaml
+Sprint3:
+  title: Creating a game for N@tM
+  direction_include: projects/courses/sprint-intro/csse-sprint-3.md
+  start: 9
+  end: 12
+```
+
+Author ordinary Markdown in `data/sprint-intro/`, beside the course YAML.
+Use Markdown headings, lists, tables, and links; do not add frontmatter.
+The distribution manifest publishes an include copy automatically under
+`_includes/projects/courses/sprint-intro/`. The existing `_includes/projects/`
+ignore rule covers it; no per-sprint ignore rules or Makefile changes are needed.
+The publisher tracks these outputs for project cleanup and removes unchanged
+outputs from previous destinations when republishing.
+The sprint template explicitly uses Jekyll's built-in `markdownify` filter;
+Markdown inside an include is not automatically converted just by its extension.
+Jekyll renders Liquid links, converts Markdown to HTML, and the template applies the shared
+OCS heading, text, table, and scrolling-table classes inside an OCS card.
+There is no hand-authored or version-controlled rubric HTML.
+The shared
+`_includes/player-pages/sprint.html` renders it after the complete Weeks card
+(including its statistics). The field is optional and course-specific, including
+when a sprint uses a shared description. A configured missing include fails
+the Jekyll build instead of silently hiding instructions.
+
+CSSE Sprint 3 provides the first example, with a phase-based assignment rubric
+worth 13 regular points plus 1 bonus point. Rubric edits belong in the Markdown.
+The former objectives notebook has been removed; its link is no longer included.
+
+Publish with `make -C _projects/systems/courses assets`. Test optional rendering,
+placement, shared-sprint behavior, rubric totals, and missing includes with
+`bundle exec ruby _projects/systems/courses/tests/test_sprint_direction.rb`.
 
 Like [calendar](../calendar/README.md), this project uses the generated
 [shared Makefile](../../_template/Makefile), not a versioned local override.

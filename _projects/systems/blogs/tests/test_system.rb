@@ -94,6 +94,8 @@ class BlogsSystemTest < Minitest::Test
       refute File.exist?(File.join(source, "_includes/course-document-player.html"))
       reader = File.read(File.join(source, "_site/reader/index.html"))
       assert_includes reader, "Catalog example"
+      assert_includes reader, "Posts from across the site: pinned posts first, then the newest."
+      refute_includes reader, "data-post-search"
       assert_includes reader, 'data-blog-reader hidden'
       assert_includes reader, "/preview/2026/10/10/example.html"
       assert_includes reader, "document.scrollingElement"

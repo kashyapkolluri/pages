@@ -8,6 +8,10 @@
     <div class="topics-browser__filters" id="topics-filters" role="group" aria-label="Topic and category filters">
       <details class="topics-browser__category-disclosure" data-topics-primary open>
         <summary><h3>Topic Filter</h3></summary>
+        <p class="ocs__links" role="group" aria-label="Combine checked topics" data-topics-match>
+          <button type="button" class="ocs__btn small accent fill" value="or" aria-pressed="true" title="Show documents in any checked topic" disabled>OR: any</button>
+          <button type="button" class="ocs__btn small accent" value="and" aria-pressed="false" title="Show only documents in every checked topic" disabled>AND: all</button>
+        </p>
         <fieldset class="topics-browser__categories topics-browser__primary">
           <legend class="topics-browser__accessible-label">Topic Filter</legend>
           {% for category in site.data.topics_primary_categories %}
@@ -54,7 +58,7 @@
   </div>
   <section data-topics-body-section hidden>
     <h2>Text matches <span class="topics-browser__count" data-topics-body-count></span></h2>
-    <ul class="topics-browser__text-results" data-topics-body-results></ul>
+    <div class="ocs__nav-grid ocs__nav-grid--in-card" data-topics-body-results></div>
   </section>
   <noscript>Enable JavaScript to combine category filters and use full-text search. The document links above remain available.</noscript>
 </section>

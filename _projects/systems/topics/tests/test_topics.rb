@@ -49,6 +49,16 @@ class TopicsTest < Minitest::Test
         ---
         <a href="/preview/java/algorithms/">Supporting lesson</a>
       DOC
+      File.write(File.join(source, "converted.md"), <<~DOC)
+        ---
+        layout: opencs
+        title: Converted Quest
+        categories: [Java]
+        permalink: /converted-quest/
+        ---
+        <!-- Converted from: Quest-Outline.docx -->
+        Quest outline.
+      DOC
       File.write(File.join(source, "course-browser.md"), <<~DOC)
         ---
         layout: opencs
@@ -72,9 +82,14 @@ class TopicsTest < Minitest::Test
       ))
       site.process
       index = JSON.parse(File.read(File.join(source, "_site/assets/js/topics/data.json")))
-      assert_equal 2, index.size
+      assert_equal 3, index.size
       lesson = index.find { |entry| entry["url"] == "/java/algorithms/" }
       assert_equal %w[java algorithms], lesson["categories"]
+      assert_equal %w[Java Algorithms], lesson["labels"]
+      assert_equal "lesson.md", lesson["path"]
+      refute lesson.key?("source")
+      converted = index.find { |entry| entry["url"] == "/converted-quest/" }
+      assert_equal "Quest-Outline.docx", converted["source"]
       assert_equal ["CSA week 14"], lesson["weeks"]
       assert_includes lesson["content"], "Algorithm evidence."
       original = File.read(File.join(source, "_site/java/algorithms/index.html"))
@@ -100,6 +115,12 @@ class TopicsTest < Minitest::Test
       assert_match(/<details[^>]*data-topics-primary[^>]*\bopen\b/, browser)
       assert_match(/<details[^>]*data-topics-secondary/, browser)
       refute_match(/<details[^>]*data-topics-secondary[^>]*\bopen\b/, browser)
+      match = browser.split('data-topics-match', 2).last.split('</p>', 2).first
+      assert_match(/<button[^>]*class="ocs__btn small accent fill"[^>]*value="or"[^>]*aria-pressed="true"[^>]*disabled/, match)
+      assert_match(/<button[^>]*class="ocs__btn small accent"[^>]*value="and"[^>]*aria-pressed="false"[^>]*disabled/, match)
+      assert_operator browser.index('data-topics-primary'), :<, browser.index('data-topics-match')
+      assert_operator browser.index('data-topics-match'), :<, browser.index('<legend class="topics-browser__accessible-label">Topic Filter</legend>')
+      refute_includes primary, 'data-topics-match'
       refute_includes browser, "Explore reference material by category."
       assert_includes browser, '<h2><label for="topics-query">Search</label></h2>'
       assert_includes browser, '<select class="ocs__input" id="topics-view">'
@@ -128,6 +149,7 @@ class TopicsTest < Minitest::Test
       assert_includes reference, 'id="course-player"'
       assert_includes reference, 'data-course-context="true"'
       assert_includes reference, 'data-initial-category="javascript"'
+      assert_includes reference, 'data-topics-match'
       assert_includes reference, 'href="/preview/java/algorithms/"'
       refute_includes reference, 'href="/preview/topics/view/java/algorithms/"'
     end

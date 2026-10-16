@@ -101,70 +101,78 @@
             {%- assign weekData = sprint[week] -%}
             {%- comment -%}
               A week is a <details> element, so the browser opens and closes it.
-              Its summary reuses the sprint row's classes, so a week reads like
-              a sprint one level down: chevron, title, then its W and count
-              pills. The week's rows are not indented further, so lesson titles
-              keep the sidebar's full width. The lesson's own week starts open,
-              and the script in _layouts/post.html turns the chevron when a
-              week opens or closes.
+              Its summary is one line: the W pill, the week's title, then its
+              count pill. The title ends with "…" when it doesn't fit
+              (ocs__truncate) and the summary's title attribute shows it whole on
+              hover. It stays cut on a touch screen too: wrapped in a space this
+              narrow it would break mid-word, and the phone menu shows it whole.
+              The sidebar is only 250px wide, so the row has no chevron, which
+              leaves the title as much room as it can.
+              The week's intro, lessons and chat sit in an ocs__tree (the OCS
+              tree grammar, in _sass/open-coding/elements/trees), which indents
+              them one level under the summary and draws a guide line. Each row
+              stays on one line the same way. The intro and lessons use 12px
+              icons (fa-bookmark, fa-file-code, the same width as an
+              assignment's fa-file-alt) so "Week 12 intro" and lesson titles keep
+              room for one more letter. The lesson's own week starts open.
             {%- endcomment -%}
+            {%- if weekData.theme -%}{%- assign weekTitle = weekData.theme -%}{%- else -%}{%- assign weekTitle = "Week " | append: week -%}{%- endif -%}
             <details data-week-group data-week="{{ week }}"{% if week == current_week %} open{% endif %}>
-              <summary class="sprint-toggle">
-                <i class="fas {% if week == current_week %}fa-chevron-down{% else %}fa-chevron-right{% endif %} sprint-chevron" aria-hidden="true"></i>
-                <span class="sprint-info">
-                  <span class="lesson-title"><strong>{% if weekData.theme %}{{ weekData.theme | escape }}{% else %}Week {{ week }}{% endif %}</strong></span><br>
-                  <span class="ocs__status-pill ocs__status-pill--good">W{{ week }}</span>
-                  <span class="ocs__status-pill ocs__status-pill--neutral" data-week-count data-week-total="{{ weekPosts.size }}">0/{{ weekPosts.size }}</span>
-                </span>
+              <summary class="sprint-toggle" title="W{{ week }}: {{ weekTitle | escape }}">
+                <span class="ocs__status-pill ocs__status-pill--good">W{{ week }}</span>
+                <span class="lesson-title ocs__truncate"><strong>{{ weekTitle | escape }}</strong></span>
+                <span class="ocs__status-pill ocs__status-pill--neutral" data-week-count data-week-total="{{ weekPosts.size }}">0/{{ weekPosts.size }}</span>
               </summary>
 
-              {%- comment -%}
-                The week's intro page, with its learning goals, comes first, so
-                Next from the last lesson of the week before lands on it.
-              {%- endcomment -%}
-              {%- assign weekUrl = "/" | append: current_course | append: "/week-" | append: week | append: "/" -%}
-              <a href="{{ site.baseurl }}{{ weekUrl }}" class="lesson-item {% if page.url == weekUrl %}active{% endif %}">
-                <i class="fas fa-bullseye" aria-hidden="true"></i>
-                <span class="lesson-title">Week {{ week }} intro</span>
-              </a>
-
-              {%- assign assignmentCount = 0 -%}
-              {%- for post in weekPosts -%}
-                {%- if post.assignment == true -%}
-                  {%- assign assignmentCount = assignmentCount | plus: 1 -%}
-                {%- endif -%}
-              <a href="{{ site.baseurl }}{{ post.url }}"
-                 class="lesson-item {% if page.url == post.url %}active{% endif %}"
-                 data-lesson-id="{{ post.url }}">
-                <i class="fas fa-circle lesson-status-icon incomplete"></i>
-                {%- if post.assignment == true -%}
-                <i class="fas fa-file-alt" aria-hidden="true"></i>
-                {%- else -%}
-                <i class="fas fa-code" aria-hidden="true"></i>
-                {%- endif -%}
-                <span class="lesson-title">{{ post.title }}</span>
-              </a>
-              {%- endfor -%}
-
-              {%- comment -%}
-                The week's chat opens as its own page, beside this sidebar.
-                It is a link, not a step, so Prev / Next pass it by.
-              {%- endcomment -%}
-              {%- assign chatUrl = weekUrl | append: "chat/" -%}
-              {%- if week == current_week -%}
-                {%- assign currentWeekUrl = weekUrl -%}
-                {%- assign currentWeekChatUrl = chatUrl -%}
-              {%- endif -%}
-              <div class="ocs__links">
-                {%- if assignmentCount > 0 -%}
-                <span class="ocs__status-pill ocs__status-pill--warn">
-                  <i class="fas fa-calendar"></i> {{ assignmentCount }} assignment{% if assignmentCount > 1 %}s{% endif %} due
-                </span>
-                {%- endif -%}
-                <a class="ocs__btn ocs__btn--icon small accent{% if page.url == chatUrl %} fill{% endif %}" href="{{ site.baseurl }}{{ chatUrl }}"{% if page.url == chatUrl %} aria-current="page"{% endif %}>
-                  <i class="fas fa-comments" aria-hidden="true"></i>
-                  Week {{ week }} Chat
+              <div class="ocs__tree">
+                {%- comment -%}
+                  The week's intro page, with its learning goals, comes first, so
+                  Next from the last lesson of the week before lands on it.
+                {%- endcomment -%}
+                {%- assign weekUrl = "/" | append: current_course | append: "/week-" | append: week | append: "/" -%}
+                <a href="{{ site.baseurl }}{{ weekUrl }}" class="lesson-item {% if page.url == weekUrl %}active{% endif %}" title="Week {{ week }} intro">
+                  <i class="fas fa-bookmark" aria-hidden="true"></i>
+                  <span class="lesson-title ocs__truncate ocs__truncate--hover">Week {{ week }} intro</span>
                 </a>
+                {%- assign assignmentCount = 0 -%}
+                {%- for post in weekPosts -%}
+                  {%- if post.assignment == true -%}
+                    {%- assign assignmentCount = assignmentCount | plus: 1 -%}
+                  {%- endif -%}
+                <a href="{{ site.baseurl }}{{ post.url }}"
+                   class="lesson-item {% if page.url == post.url %}active{% endif %}"
+                   data-lesson-id="{{ post.url }}"
+                   title="{{ post.title | escape }}">
+                  <i class="fas fa-circle lesson-status-icon incomplete"></i>
+                  {%- if post.assignment == true -%}
+                  <i class="fas fa-file-alt" aria-hidden="true"></i>
+                  {%- else -%}
+                  <i class="fas fa-file-code" aria-hidden="true"></i>
+                  {%- endif -%}
+                  <span class="lesson-title ocs__truncate ocs__truncate--hover">{{ post.title }}</span>
+                </a>
+                {%- endfor -%}
+
+                {%- comment -%}
+                  The week's chat opens as its own page, beside this sidebar.
+                  It is a link, not a step, so Prev / Next pass it by.
+                {%- endcomment -%}
+                {%- assign chatUrl = weekUrl | append: "chat/" -%}
+                {%- if week == current_week -%}
+                  {%- assign currentWeekUrl = weekUrl -%}
+                  {%- assign currentWeekChatUrl = chatUrl -%}
+                {%- endif -%}
+                <div class="ocs__links ocs__tree-item">
+                  {%- if assignmentCount > 0 -%}
+                  <span class="ocs__status-pill ocs__status-pill--warn">
+                    <i class="fas fa-calendar"></i> {{ assignmentCount }} assignment{% if assignmentCount > 1 %}s{% endif %} due
+                  </span>
+                  {%- endif -%}
+                  <a class="ocs__btn ocs__btn--icon small accent{% if page.url == chatUrl %} fill{% endif %}" href="{{ site.baseurl }}{{ chatUrl }}"{% if page.url == chatUrl %} aria-current="page"{% endif %}>
+                    <i class="fas fa-comments" aria-hidden="true"></i>
+                    Week {{ week }} Chat
+                  </a>
+                </div>
               </div>
             </details>
             {%- endif -%}

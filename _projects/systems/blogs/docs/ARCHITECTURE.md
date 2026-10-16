@@ -93,8 +93,10 @@ sources or the GitHub Pages hosting service.
 | Course document view | Add Courses' sidebar, top bar, progression and course context |
 
 The catalog displays posts from across the site, with pinned posts first and
-then newest posts. It is distinct from a course week's document collection,
-which Courses selects using course/week metadata.
+then newest posts. A host can narrow it to one course with `course=`, which keeps
+posts whose `courses` names only that course, and add a search bar with
+`search=true` (or `post_search: true` on a page). It is distinct from a course
+week's document collection, which Courses selects using course/week metadata.
 
 The embedded reader fetches same-site document HTML, resolves relative links
 and images, and maintains `?post=` history. It preserves list navigation,
@@ -145,7 +147,7 @@ backend services supply their functionality.
 | --- | --- |
 | [Layouts](../layouts/) | Post, catalog, reader, notebook and study/capture presentation |
 | [Includes](../_includes/) | Catalog, document cards, embedded reader and submission UI |
-| [JavaScript](../js/) | Document completion and study/capture behavior |
+| [JavaScript](../js/) | Document completion, catalog search and study/capture behavior |
 | [Styles](../sass/) | Shared document/player and submission presentation |
 | [Distribution manifest](../distribution.json) | Published Jekyll and browser destinations |
 | [Tests](../tests/) | Catalog, independent rendering and publication contracts |
@@ -181,5 +183,7 @@ these layers.
 - `bundle exec ruby scripts/test_blogs_system.rb`: standalone document/reader
   rendering, module syntax and disjoint publication ownership.
 - `bundle exec ruby scripts/test_course_landing_pages.rb`: course composition.
+- `node --test tests/post_search.test.mjs`: catalog search matching, highlight
+  ranges, `?q=` state and search bar states.
 - Jekyll/Ruby-Sass builds and browser checks cover published document and reader
   views; interactive services also depend on their backend/runtime availability.

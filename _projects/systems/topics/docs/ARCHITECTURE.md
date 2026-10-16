@@ -38,7 +38,7 @@ Conversion and Jekyll posts/pages
     |                      │   ├── Cards / List browsing
     |                      │   └── Scoped full-text Search
     |                      │       ├── Title matches - highlighted cards
-    |                      │       └── Text matches - highlighted excerpts
+    |                      │       └── Text matches - file name, excerpt and category cards
     |                      └── Topics document view
     |                          ├── Full authored content
     |                          ├── Runners and Submissions
@@ -62,10 +62,18 @@ The content model uses existing frontmatter:
 categories: [Java, Algorithms]
 ```
 
-Categories are independent facets, not an ordered parent/child path. Selecting
-Java finds its collection; selecting Java and Algorithms finds their
-intersection. Both filter groups support multiple selections, and all selected
-categories must match a document.
+Categories are independent facets, not an ordered parent/child path. Both filter
+groups support multiple selections. Checked boxes in the same group are
+alternatives: Java and Python finds every document in either collection. The two
+groups narrow each other: Java (Topic Filter) and Algorithms (Categories Filter)
+finds documents in both. In set terms, each group is a union and the groups are
+intersected.
+
+The Topic Filter has OR and AND buttons. OR, the default, is the rule above. AND
+requires every checked Topic Filter box: Java and Spring finds only documents in
+both collections. Categories Filter boxes remain alternatives in both modes, and
+the two groups still narrow each other. In set terms, AND makes the Topic group an
+intersection instead of a union.
 
 The [primary topics configuration](../data/topics_primary.yml) orders prominent
 categories: SASS, Python, Java, JavaScript, Flask, Spring, CS111, CS112 and CS113.
@@ -87,8 +95,10 @@ sorted by title for ordinary browsing.
 
 The generator creates:
 
-- A catalog with title, description, category keys, original URL, Topics view
-  URL, searchable content and optional course/week display metadata.
+- A catalog with title, description, category keys and display labels, source
+  path (and the original `.docx` name of a converted Word document), original
+  URL, Topics view URL, searchable content and optional course/week display
+  metadata.
 - Primary and secondary category collections for the browser.
 - A JSON search catalog at `/assets/js/topics/data.json`.
 - Full-document routes under `/topics/view/`.
@@ -105,7 +115,10 @@ loaded through relative includes is not expanded into the search text.
 
 The [browser include](../_includes/topics-browser.html) presents two disclosures
 inside a filter box. Topic Filter defaults open; Categories Filter defaults
-closed. Clear Filters belongs to that box and clears only category selections.
+closed. Topic Filter starts with its OR/AND pair: `ocs__btn` buttons in an
+`ocs__links` group, the current choice filled and `aria-pressed`, disabled until
+the search index loads. Clear Filters belongs to that box and clears only category
+selections.
 Search has its own clear control. Each clear button is dimmed and disabled when
 its corresponding state is empty.
 
@@ -118,12 +131,12 @@ from the static catalog. Title, description and content participate in search,
 with title matches boosted. User input is tokenized as terms rather than
 interpreted as Lunr query syntax.
 
-Browsing and search use the same category intersection:
+Browsing and search use the same category filter:
 
 | Mode | Output |
 | --- | --- |
 | No query | Selected documents in Cards or List view |
-| Search query | Title-match cards, followed by text-match excerpts |
+| Search query | Title-match cards, followed by text-match cards with excerpts |
 | No matching documents | Explicit empty-result status |
 | Index unavailable | Error status with ordinary document links still available |
 
@@ -132,7 +145,7 @@ otherwise content or description supplies the excerpt. Each group preserves
 search relevance ordering and displays its count beside its heading. Search
 uses title cards regardless of the browsing view selection.
 
-The [model helpers](../js/model.js) implement category intersection, URL state,
+The [model helpers](../js/model.js) implement the category filter, URL state,
 match grouping and excerpt construction. Highlights are created with text nodes
 and `mark` elements, not injected document HTML. Search results remain within
 the selected collection rather than replacing it with a global search overlay.
@@ -160,11 +173,12 @@ URL parameters carry browser state:
 
 - Repeated `category` values identify selected facets.
 - `q` carries the search text.
+- `match=and` requires every checked Topic Filter box; OR is the default.
 - `view=list` selects list browsing; cards are the default.
 
 State is shareable and restored during browser history navigation. Clearing
-filters preserves the query and view; clearing Search preserves filters and
-view.
+filters preserves the query, view and OR/AND choice; clearing Search preserves
+filters and view.
 
 ## Integration boundaries
 
@@ -215,7 +229,7 @@ build does not require a separate npm installation.
 - `bundle exec ruby scripts/test_topics.rb`: catalog and primary configuration,
   original versus Topics rendering, source-relative includes, submission
   identity and browser markup.
-- `node --test tests/topics.test.mjs`: category intersections, scoped search,
+- `node --test tests/topics.test.mjs`: category filters, scoped search,
   URL state, grouped matches and highlighted excerpts.
 - Jekyll builds through the repository workflow: generated routes, Liquid
   rendering and Ruby Sass compatibility.

@@ -84,6 +84,14 @@ class GameLevelSecret {
       hitbox: { widthPercentage: 0.0, heightPercentage: 0.0 },
       fromOverlay: true,
     };
+    // The painted START/FINISH gates sit across side roads, so laps use a drawn line on the bottom
+    // straight instead. The HUD sits over the lava below the castle, since the track circles every corner.
+    const lap_data = {
+      totalLaps: 3,
+      finishLine: { x: 0.568, top: 0.841, bottom: 0.939 },
+      drawFinishLine: true,
+      hudPosition: { x: 0.42, y: 0.63 }
+    };
     this.classes = [
         {class: GameEnvBackground, data: background_data},
         {class: Player, data: player_data},
@@ -92,7 +100,7 @@ class GameLevelSecret {
         { class: SplineBarrier, data: barrierData2 },
         { class: SplineBarrier, data: barrierData3 },
         { class: SplineBarrier, data: barrierData4 },
-        { class: TimeLapScreen, data: { currentLap: 1, totalLaps: 3 } },
+        { class: TimeLapScreen, data: lap_data },
     ]
   }
 }

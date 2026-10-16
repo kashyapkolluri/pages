@@ -4,6 +4,9 @@
   page can use layout: blog-reader. The list is built on each build, so new posts appear
   on their own. lesson-body gives the titles the lessons' heading style.
 
+  A host can pass course=<course> to list only that course's posts and
+  search=true to add the catalog's search bar; both go on to blog-catalog.html.
+
   A post opens right here instead of on its own page: the script below reads
   the post's page, shows its article in the reader with a button back to the
   list, and keeps ?post=<address> in the address bar so a reload, a shared
@@ -13,10 +16,14 @@
 <div data-blog-list>
   <div class="lesson-body">
     <h2>{{ page.title | escape }}</h2>
+    {%- if include.course %}
+    <p>{{ include.course | upcase }} posts: pinned posts first, then the newest. A post opens right here. Posts that aren't for one class, like capstones, are on the <a href="{{ site.baseurl }}/navigation/blogs/">site's Blogs page</a>.</p>
+    {%- else %}
     <p>Posts from across the site: pinned posts first, then the newest. A post opens right here.</p>
+    {%- endif %}
   </div>
 
-  {% include blog-catalog.html %}
+  {% include blog-catalog.html course=include.course search=include.search %}
 </div>
 
 <div data-blog-reader hidden>

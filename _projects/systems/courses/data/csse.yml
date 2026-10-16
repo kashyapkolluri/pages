@@ -56,6 +56,7 @@ Sprint1:
       - "Set Future Knowledge Goals"
 Sprint2:
   title: JavaScript Foundations & Student Teaching
+  direction_include: projects/courses/sprint-intro/csse-sprint-2.md
   description: A key focus of this course is to make Web Games using JavaScript. Understanding fundamentals like control structures, data types, input/output, operators, classes, methods and parameters, basic inheritance, and documentation practices are essentiial. Students will be teaching lessons on these topics to their peers.  Each student will be responsible for a portion of the lesson, a popcorn hack, and homework.  Students will be graded on their teaching, the popcorn hack, and the homework they assign.  Students will also be graded on their participation in learning from their peers.
   start: 5
   end: 8
@@ -86,39 +87,41 @@ Sprint2:
       - "Complete Homework"
 Sprint3:
   title: Creating a game for N@tM
+  direction_include: projects/courses/sprint-intro/csse-sprint-3.md
   description: Part of the process of becoming technically proficient is going beyond fundamentals by taking on a project challenge while coding. A challenge with some vision, questions, AI research, and more allow amazing things to be accomplished. Our goal is to participate in N@tM with the other CS classes and other classes from the Electives Department.  We should have a blog, progress in a game, and a series of lesson hacks to show off.
   start: 9
   end: 12
   9:
-    theme: "Game Development Basics"
+    theme: "Game Design"
     goals:
-      - "Build Game Elements"
-      - "Backgrounds"
-      - "Sprites and Animation"
-      - "Player and NPCs"
+      - "Empathy Interviews"
+      - "Define POV & HMW Prompts"
+      - "Create Kanban Board"
+      - "Prototype Game Ideas"
   10:
-    theme: "Game Development Mechanics"
+    theme: "Game Building"
     goals:
-      - "Classroom Development Plan"
-      - "Kanban Board Assignments"
-      - "Add Levels and Challenges"
-      - "Add new Game Mechanics"
+      - "Create Game Level Elements"
+      - "Implement Object Interactions"
+      - "Implement Game Level Logic"
+      - "Test Game versus Rubric"
   11:
-    theme: "Game Polishing and Presentation"
+    theme: "Game Integration"
     goals:
-      - "Deploy Game"
-      - "Test Game"
       - "Polish Game Features"
-      - "Prepare for Presentation"
+      - "Update Kanban Board"
+      - "Submit Upstream Pull Request"
+      - "Test Game Integration"
   12:
-    theme: "Game Deployment and Feedback"
+    theme: "Game Test"
     goals:
-      - "Crossover Reviews"
-      - "Present at N@tM"
-      - "Collect Feedback"
-      - "Plan Next Steps on Game Design"
+      - "Crossover Group Testing"
+      - "Conduct User Testing"
+      - "Feedback Collection"
+      - "Retrospective and Next Steps"
 Sprint4:
   title: Ideating, Tinkering, Building and OOP
+  direction_include: projects/courses/sprint-intro/csse-sprint-4.md
   description: Explore the OCS GameEngine—a platform designed to make learning computer science both fun and accesible. You will work collaboratively, build games, and apply key programming concepts in a creative, team-based environment.
   start: 13
   end: 16

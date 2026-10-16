@@ -83,10 +83,12 @@ class GameLevelSpring {
         {class: Player, data: player2_data},
         {class: SplineBarrier, data: barrierData1},
         {class: SplineBarrier, data: barrierData2},
-    
+        {class: TimeLapScreen, data: lap_data}
     ]
   }
 }
+
+
 
 export default GameLevelSpring;
 

@@ -16,7 +16,8 @@ original `/gamebuilder/` page. Other documentation is published from `docs/`.
   front-matter cell of a lesson notebook (or a documentation Markdown source)
   to include it. Hidden posts remain excluded; sticky rank and newest-first
   ordering follow the existing blog conventions. The catalog is itself hidden
-  from blog listings and does not carry the `game_docs` flag.
+  from blog listings and does not carry the `game_docs` flag. `post_search: true`
+  puts the Blogs catalog's search bar over the docs.
 - `notebooks/` owns the variables homework, backgrounds lesson, and characters
   lesson. The characters lesson teaches Player and NPC data, instantiation,
   inheritance, and animation through two editable GAME_RUNNER examples.

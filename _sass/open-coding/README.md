@@ -112,7 +112,7 @@ Example:
 ```
 
 RFID uses scoped aliases that map back to preferences in
-[`presence-system-common-style.html`](../../../_includes/presence-system-common-style.html).
+[`presence.scss`](../capstone/presence.scss).
 Jarvis uses the same pattern in [`jarvis.scss`](../capstone/jarvis.scss):
 
 ```scss
@@ -193,6 +193,52 @@ Use `ocs__table-wrap` for horizontal scrolling and `ocs__table` for theme-aware
 headers, borders, alternating rows, and hover states.
 
 See [`elements/tables`](elements/tables).
+
+### Trees
+
+```html
+<div class="ocs__tree-item">Week 1</div>
+<div class="ocs__tree">
+  <div class="ocs__tree-item"><a href="/example/lesson-1">Lesson 1</a></div>
+  <div class="ocs__tree-item"><a href="/example/lesson-2">Lesson 2</a></div>
+  <div class="ocs__tree">
+    <div class="ocs__tree-item"><a href="/example/lesson-2/part-a">Part A</a></div>
+  </div>
+</div>
+```
+
+Common tree classes:
+
+- `ocs__tree`: indents its children one level and draws an accent guide line
+  down the left, under the row above. Put one inside another for each deeper level.
+- `ocs__tree-item`: spaces a plain child (text, a link, or an `ocs__links`
+  group) off the guide line. Rows that already have padding, like the course
+  sidebar's `lesson-item` rows, go straight inside `ocs__tree`.
+
+See [`elements/trees`](elements/trees). The course sidebar
+(`_projects/systems/courses/_includes/lesson-sidebar-nav.html`) nests each
+week's lessons and chat this way.
+
+### One-line text
+
+```html
+<a class="ocs__keypoint" href="/example/lesson" title="Agile Methodologies Practitioner">
+  <i class="fas fa-code"></i>
+  <span class="ocs__truncate ocs__truncate--hover">Agile Methodologies Practitioner</span>
+</a>
+```
+
+- `ocs__truncate`: keeps text on one line and ends it with "…" when it doesn't
+  fit. Put the full text in a `title` attribute on it or on its link, so
+  hovering shows it. Use it on a block element or a flex item, like the text
+  beside an icon.
+- `ocs__truncate--hover`: cuts the text only on devices that can hover (a
+  mouse or trackpad). A phone or tablet can't show the title, so there the
+  text wraps instead and stays readable.
+
+See [`elements/typography`](elements/typography). The course sidebar's lesson
+rows and the phone menu use both classes. The sidebar's week titles use
+`ocs__truncate` alone: their space is too narrow to wrap without breaking words.
 
 ### Capstone document elements
 

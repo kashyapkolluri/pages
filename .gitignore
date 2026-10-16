@@ -99,6 +99,7 @@ images/projects/
 /_data/csp.yml
 /_data/csse.yml
 /_data/csh.yml
+/_data/sprint-intro/
 /navigation/course.md
 /navigation/blog.md
 /assets/js/course-entry.js
@@ -107,6 +108,7 @@ images/projects/
 /assets/js/lesson-completion-bigsix.js
 /assets/js/lessonbase.js
 /assets/js/lessonbasecapture.js
+/assets/js/blogs/
 /assets/js/chat/calendar/
 /_sass/open-coding/lesson-player.scss
 /_sass/open-coding/blogs.scss

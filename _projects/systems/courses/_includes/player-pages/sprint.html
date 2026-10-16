@@ -72,3 +72,16 @@
     <div class="ocs__stat"><span class="ocs__stat-value">{{ assignmentCount }}</span><span class="ocs__stat-label">{% if assignmentCount == 1 %}Assignment{% else %}Assignments{% endif %}</span></div>
   </div>
 </div>
+
+{%- if sprint.direction_include %}
+  {%- capture sprintDirection -%}{% include {{ sprint.direction_include }} %}{%- endcapture -%}
+  <section class="ocs__card" aria-label="Sprint directions">
+    {{ sprintDirection | markdownify
+      | replace: '<h2 ', '<h2 class="ocs__section-title" '
+      | replace: '<h3 ', '<h3 class="ocs__section-title" '
+      | replace: '<p>', '<p class="ocs__text">'
+      | replace: '<ul>', '<ul class="ocs__text">'
+      | replace: '<table>', '<div class="ocs__table-wrap"><table class="ocs__table">'
+      | replace: '</table>', '</table></div>' }}
+  </section>
+{%- endif %}

@@ -197,17 +197,6 @@
     lessons.dispatchEvent(new CustomEvent('navigation-toggle', { bubbles: true }));
   };
 
-  // A week is a <details>, so the browser opens and closes it; this only
-  // turns its chevron to match, the way toggleSprint() turns a sprint's.
-  document.querySelectorAll('[data-week-group]').forEach((week) => {
-    week.addEventListener('toggle', () => {
-      const chevron = week.querySelector('summary .sprint-chevron');
-      if (!chevron) return;
-      chevron.classList.toggle('fa-chevron-right', !week.open);
-      chevron.classList.toggle('fa-chevron-down', week.open);
-    });
-  });
-
   /**
    * ============================================
    * COMPLETION DATA LAYER: LocalStorage operations
@@ -466,55 +455,68 @@
    * ============================================
    * TIMELINE MODAL: Mobile navigation
    * ============================================
+   * The phone menu mirrors the sidebar: each sprint card lists the sprint's
+   * intro, then each week as a heading (its W pill, then its title) over an
+   * ocs__tree of its intro, lessons and chat, read from the sidebar's markup.
    */
   function buildTimelineModal() {
     const completionData = getCompletionData();
-    const lessonItems = document.querySelectorAll('#lesson-sidebar .sprint-section .lesson-item, #lesson-sidebar .sprint-section .ocs__links a');
-    const sprintGroups = {};
-
-    lessonItems.forEach(item => {
-      const sprintSection = item.closest('.sprint-section');
-      if (!sprintSection) return;
-      
-      const sprintTitle = sprintSection.querySelector('.sprint-title').textContent;
-      if (!sprintGroups[sprintTitle]) sprintGroups[sprintTitle] = [];
-      
-      sprintGroups[sprintTitle].push({
-        id: item.dataset.lessonId,
-        title: (item.querySelector('.lesson-title') || item).textContent.trim(),
-        url: item.href,
-        completed: item.dataset.lessonId && completionData[item.dataset.lessonId] || false,
-        active: item.classList.contains('active') || item.getAttribute('aria-current') === 'page',
-        icon: item.dataset.lessonId ? 'fa-solid fa-circle' : (item.querySelector('i')?.className || 'fas fa-book')
-      });
+    const toRow = item => ({
+      id: item.dataset.lessonId,
+      title: (item.querySelector('.lesson-title') || item).textContent.trim(),
+      url: item.href,
+      completed: item.dataset.lessonId && completionData[item.dataset.lessonId] || false,
+      active: item.classList.contains('active') || item.getAttribute('aria-current') === 'page',
+      icon: item.dataset.lessonId ? 'fa-solid fa-circle' : (item.querySelector('i')?.className || 'fas fa-book')
     });
 
-    return sprintGroups;
+    return Array.from(document.querySelectorAll('#lesson-sidebar .sprint-section'), section => ({
+      title: section.querySelector('.sprint-title').textContent,
+      intros: Array.from(section.querySelectorAll('.lesson-list > .lesson-item'), toRow),
+      weeks: Array.from(section.querySelectorAll('[data-week-group]'), week => ({
+        title: week.querySelector('summary .lesson-title').textContent.trim(),
+        badge: week.querySelector('summary .ocs__status-pill').textContent.trim(),
+        rows: Array.from(week.querySelectorAll('.ocs__tree > .lesson-item, .ocs__tree .ocs__links a'), toRow)
+      }))
+    }));
   }
 
-  function renderTimelineModal(sprintGroups) {
+  // Titles are page text, so escape them before they go into the menu's HTML.
+  const escapeHTML = text => String(text).replace(/[&<>"']/g, char => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]
+  ));
+
+  // A title that doesn't fit ends with "…" where the reader can hover to see it
+  // whole, and wraps on a touch screen (ocs__truncate--hover).
+  function renderModalRow(lesson) {
+    return `
+          <a href="${escapeHTML(lesson.url)}" data-lesson-id="${escapeHTML(lesson.id || '')}" class="modal-lesson-item ${lesson.active ? 'active' : ''}" title="${escapeHTML(lesson.title)}">
+            <i class="${lesson.completed ? 'fa-solid fa-circle-check' : escapeHTML(lesson.icon)} modal-lesson-status ${lesson.completed ? 'completed' : 'incomplete'}"></i>
+            <span class="modal-lesson-title ocs__truncate ocs__truncate--hover">${escapeHTML(lesson.title)}</span>
+          </a>`;
+  }
+
+  function renderTimelineModal(sprints) {
     const modalContent = document.getElementById('timeline-modal-content');
     if (!modalContent) return;
 
-    modalContent.innerHTML = Object.entries(sprintGroups).map(([sprintTitle, lessons]) => {
-      const sprintId = sprintTitle.replace(/\s+/g, '-').toLowerCase();
-      const lessonHTML = lessons.map(lesson => `
-        <a href="${lesson.url}" data-lesson-id="${lesson.id || ''}" class="modal-lesson-item ${lesson.active ? 'active' : ''}">
-          <i class="${lesson.completed ? 'fa-solid fa-circle-check' : lesson.icon} modal-lesson-status ${lesson.completed ? 'completed' : 'incomplete'}"></i>
-          <span class="modal-lesson-title">${lesson.title}</span>
-        </a>
-      `).join('');
-      
+    modalContent.innerHTML = sprints.map(sprint => {
+      const sprintId = sprint.title.replace(/\s+/g, '-').toLowerCase();
+      const weeksHTML = sprint.weeks.map(week => `
+          <h4 class="ocs__section-title"><span class="ocs__status-pill ocs__status-pill--good">${escapeHTML(week.badge)}</span> ${escapeHTML(week.title)}</h4>
+          <div class="ocs__tree">${week.rows.map(renderModalRow).join('')}
+          </div>`).join('');
+
       return `
         <div class="modal-sprint-card">
           <div class="modal-sprint-header">
-            <h3 class="modal-sprint-title">${sprintTitle}</h3>
+            <h3 class="modal-sprint-title">${escapeHTML(sprint.title)}</h3>
             <button class="modal-sprint-toggle" onclick="toggleModalSprint('${sprintId}')">
               <i class="fa-solid fa-chevron-down"></i> View Lessons
             </button>
           </div>
           <div class="modal-lessons" id="modal-${sprintId}">
-            ${lessonHTML}
+            ${sprint.intros.map(renderModalRow).join('')}${weeksHTML}
           </div>
         </div>
       `;
@@ -541,8 +543,7 @@
     const closeBtn = document.getElementById('timeline-close-btn');
     const modalContent = document.getElementById('timeline-modal-content');
 
-    const sprintGroups = buildTimelineModal();
-    renderTimelineModal(sprintGroups);
+    renderTimelineModal(buildTimelineModal());
     const sections = Array.from(modalContent.querySelectorAll('.modal-lessons'), element => ({
       id: element.id, element,
       isOpen: () => element.classList.contains('expanded'),

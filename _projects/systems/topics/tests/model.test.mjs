@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { selectedDocuments, readState, writeState, groupedMatches, highlightedParts } from '../js/model.js';
+import { filterGroups, selectedDocuments, readState, writeState, groupedMatches, highlightedParts, resultDetails, wrappableParts } from '../js/model.js';
 
 const require = createRequire(import.meta.url);
 const lunr = require('../../../../assets/js/vendor/lunr.min.js');
@@ -11,11 +11,44 @@ const documents = [
   { url: '/objects/', title: 'Objects', content: 'Inheritance', categories: ['java'] },
 ];
 
-test('categories are independent facets and combined filters use intersection', () => {
-  assert.equal(selectedDocuments(documents, ['algorithms']).length, 2);
-  assert.deepEqual(selectedDocuments(documents, ['java', 'algorithms']).map((doc) => doc.url), ['/java/']);
-  assert.equal(selectedDocuments(documents, ['java', 'python']).length, 0);
-  assert.equal(selectedDocuments(documents, []).length, 3);
+const topics = ['java', 'python'];
+const any = { primary: topics };
+const every = { primary: topics, match: 'and' };
+
+test('boxes in one filter widen the results and the two filters narrow each other', () => {
+  assert.equal(selectedDocuments(documents, ['algorithms'], null, any).length, 2);
+  assert.deepEqual(selectedDocuments(documents, ['java', 'python'], null, any).map((doc) => doc.url),
+    ['/java/', '/python/', '/objects/']);
+  assert.deepEqual(selectedDocuments(documents, ['java', 'algorithms'], null, any).map((doc) => doc.url), ['/java/']);
+  assert.deepEqual(selectedDocuments(documents, ['java', 'python', 'algorithms'], null, any).map((doc) => doc.url),
+    ['/java/', '/python/']);
+  assert.equal(selectedDocuments(documents, [], null, any).length, 3);
+});
+
+test('two Categories Filter boxes are alternatives too', () => {
+  const docs = [
+    { url: '/a/', categories: ['java', 'arrays'] },
+    { url: '/b/', categories: ['java', 'loops'] },
+    { url: '/c/', categories: ['java', 'classes'] },
+  ];
+  assert.deepEqual(selectedDocuments(docs, ['arrays', 'loops'], null, any).map((doc) => doc.url), ['/a/', '/b/']);
+});
+
+test('AND requires every checked topic; categories stay alternatives that narrow', () => {
+  const docs = [
+    { url: '/both/', categories: ['java', 'python', 'arrays'] },
+    { url: '/java/', categories: ['java', 'arrays'] },
+    { url: '/python/', categories: ['python', 'loops'] },
+  ];
+  const urls = (categories, rule) => selectedDocuments(docs, categories, null, rule).map((doc) => doc.url);
+  assert.deepEqual(urls(['java', 'python'], any), ['/both/', '/java/', '/python/']);
+  assert.deepEqual(urls(['java', 'python'], every), ['/both/']);
+  assert.deepEqual(urls(['java'], every), urls(['java'], any));
+  assert.deepEqual(urls(['java', 'python', 'arrays', 'loops'], every), ['/both/']);
+  assert.deepEqual(urls(['arrays', 'loops'], every), ['/both/', '/java/', '/python/']);
+  assert.deepEqual(urls([], every), ['/both/', '/java/', '/python/']);
+  assert.deepEqual(filterGroups(['loops', 'java', 'python'], every), [['java'], ['python'], ['loops']]);
+  assert.deepEqual(filterGroups(['loops', 'java', 'python'], any), [['java', 'python'], ['loops']]);
 });
 
 test('full-text matches cannot escape the selected categories', () => {
@@ -27,7 +60,7 @@ test('full-text matches cannot escape the selected categories', () => {
   });
   const ids = index.search('binary').map((result) => result.ref);
   assert.equal(ids.length, 2);
-  assert.deepEqual(selectedDocuments(documents, ['java'], ids).map((doc) => doc.url), ['/java/']);
+  assert.deepEqual(selectedDocuments(documents, ['java'], ids, any).map((doc) => doc.url), ['/java/']);
   assert.equal(selectedDocuments(documents, ['java'], index.search('missing').map((result) => result.ref)).length, 0);
 });
 
@@ -36,6 +69,17 @@ test('category and query context round trips without interpreting Lunr syntax', 
   assert.deepEqual(state.categories, ['java', 'algorithms']);
   assert.deepEqual(readState(`?${writeState(state)}`), state);
   assert.equal(readState('?view=invalid').view, 'cards');
+});
+
+test('AND is shareable in the URL and OR, the default, is left out', () => {
+  const and = readState('?category=java&category=python&match=and');
+  assert.equal(and.match, 'and');
+  assert.equal(writeState(and), 'category=java&category=python&match=and');
+  assert.deepEqual(readState(`?${writeState(and)}`), and);
+  assert.equal(readState('?category=java').match, 'or');
+  assert.equal(readState('?match=AND').match, 'and');
+  assert.equal(readState('?match=all').match, 'or');
+  assert.equal(writeState(readState('?category=java&match=or')), 'category=java');
 });
 
 test('title cards precede body matches and both respect all category filters', () => {
@@ -51,7 +95,7 @@ test('title cards precede body matches and both respect all category filters', (
     this.metadataWhitelist = ['position'];
     docs.forEach((doc) => this.add(doc));
   });
-  const groups = groupedMatches(docs, ['java', 'algorithms'], index.search('algorithm'));
+  const groups = groupedMatches(docs, ['java', 'algorithms'], index.search('algorithm'), any);
   assert.deepEqual(groups.title.map((match) => match.document.url), ['/title/']);
   assert.deepEqual(groups.body.map((match) => match.document.url), ['/body/']);
   assert.deepEqual(highlightedParts(groups.title[0].document.title, groups.title[0].positions)
@@ -59,6 +103,10 @@ test('title cards precede body matches and both respect all category filters', (
   assert.equal(groups.body[0].field, 'content');
   assert.equal(highlightedParts(groups.body[0].document.content, groups.body[0].positions)
     .find((part) => part.highlighted).text, 'algorithm');
+  const either = groupedMatches(docs, ['java', 'python'], index.search('algorithm'), any);
+  assert.deepEqual([...either.title, ...either.body].map((match) => match.document.url).sort(), ['/body/', '/other/', '/title/']);
+  const both = groupedMatches(docs, ['java', 'python'], index.search('algorithm'), every);
+  assert.deepEqual([...both.title, ...both.body], []);
 });
 
 test('excerpts center on matches and merge overlapping ranges without losing text', () => {
@@ -70,4 +118,33 @@ test('excerpts center on matches and merge overlapping ranges without losing tex
   assert.ok(parts.map((part) => part.text).join('').length < text.length);
   assert.equal(highlightedParts('<img src=x onerror=alert(1)>', [[0, 4]]).map((part) => part.text).join(''),
     '<img src=x onerror=alert(1)>');
+});
+
+test('text results name the source file and list primary subjects first', () => {
+  const details = resultDetails({
+    url: '/csa/io/', path: '_posts/csa/2025-10-01-text-files.md', labels: ['Files', 'Java'], categories: ['files', 'java'],
+  }, ['java', 'sass']);
+  assert.equal(details.file, '2025-10-01-text-files.md');
+  assert.equal(details.path, '_posts/csa/2025-10-01-text-files.md');
+  assert.deepEqual(details.subjects, ['Java', 'Files']);
+  assert.equal(resultDetails({ url: '/x/', categories: ['java'] }).file, '/x/');
+  assert.equal(resultDetails({ url: '/n/', path: '_posts/2025-09-21-files_IPYNB_2_.md', categories: [] }).file,
+    '2025-09-21-files.ipynb');
+  assert.equal(resultDetails({
+    url: '/q/', path: '_posts/2026-10-13-Quests_Outline_DOCX_.md', source: 'Outline.docx', categories: [],
+  }).file, 'Outline.docx');
+});
+
+test('long words get break points so a phone-width card never outgrows the screen', () => {
+  assert.deepEqual(wrappableParts('Check for another token, then consume it.'), ['Check for another token, then consume it.']);
+  for (const text of [
+    'see https://apcentral.collegeboard.org/media/pdf/ap-computer-science-a-course-and-exam-description.pdf for details',
+    '2025-10-09-developing_procedures_remakers_lesson.ipynb',
+    'form 1FAIpQLSepOCmW6KeE7jw4f80JzWq2nVbL9xT3uHcRyDkMgPoA',
+  ]) {
+    const parts = wrappableParts(text);
+    assert.equal(parts.join(''), text);
+    assert.ok(parts.length > 1);
+    assert.ok(parts.every((part) => part.split(/\s+/).every((word) => word.length <= 20)));
+  }
 });

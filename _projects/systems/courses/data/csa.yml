@@ -129,6 +129,7 @@ Sprint2:
   end: 8
 Sprint3:
   title: Sustained Capstone Teams and N@tM
+  direction_include: projects/courses/sprint-intro/csa-sprint-3.md
   description: "Beginning in week 9, students establish or continue an OpenCS capstone that can grow across all three trimesters, rather than a project discarded at the sprint's end. Team portfolios include Gamification/Onboarding, Admin/Security, Communication/Design, and AI/Assignments. Students plan before coding, implement Java/Spring REST and MVC features with persistence and Web interfaces, integrate contributions, and test normal, boundary, and failure cases. Individual review tickets connect design, code, tests, and feedback to each student's role. Before week 13, every team completes two mentor reviews and a community N@tM presentation, focusing on the project, a working demonstration, and discussion of how it is made. This mentor-review and community-presentation cycle continues throughout the year, with feedback informing later iterations. The sprint closes with a working deployed feature, presentation, and reflection; later CSA2 and DS2 iterations deepen the same project's CS112/CS113 concepts. Project participation alone does not establish individual mastery or college credit."
   start: 9
   end: 12

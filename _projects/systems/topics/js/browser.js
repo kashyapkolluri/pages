@@ -1,10 +1,13 @@
-import { selectedDocuments, readState, writeState, groupedMatches, highlightedParts } from './model.js';
+import { selectedDocuments, readState, writeState, groupedMatches, highlightedParts, resultDetails, wrappableParts } from './model.js';
 
 const root = document.querySelector('[data-topics-browser]');
 if (root) {
   const query = root.querySelector('#topics-query');
   const view = root.querySelector('#topics-view');
   const filters = [...root.querySelectorAll('input[type="checkbox"]')];
+  // Topic Filter values; every other checked box belongs to the Categories Filter.
+  const primary = [...root.querySelectorAll('[data-topics-primary] input[type="checkbox"]')].map((filter) => filter.value);
+  const matchButtons = [...root.querySelectorAll('[data-topics-match] button')];
   const status = root.querySelector('[data-topics-status]');
   const cards = [...root.querySelectorAll('[data-topic-url]')];
   const results = root.querySelector('[data-topics-results]');
@@ -20,12 +23,25 @@ if (root) {
   }
   let documents = [];
   let index;
+  // A shared ?match=and link shows AND while the index loads (the buttons stay disabled).
+  showMatch();
 
+  function wrappable(text) {
+    const fragment = document.createDocumentFragment();
+    wrappableParts(text).forEach((part, index) => {
+      if (index) fragment.append(document.createElement('wbr'));
+      fragment.append(part);
+    });
+    return fragment;
+  }
+
+  // Excerpts are document text, so long URLs get <wbr> break points.
   function highlight(element, text, positions, excerpt = false) {
+    const content = (value) => (excerpt ? wrappable(value) : document.createTextNode(value));
     element.replaceChildren(...highlightedParts(text, positions, excerpt).map((part) => {
-      if (!part.highlighted) return document.createTextNode(part.text);
+      if (!part.highlighted) return content(part.text);
       const mark = document.createElement('mark');
-      mark.textContent = part.text;
+      mark.append(content(part.text));
       return mark;
     }));
   }
@@ -37,19 +53,30 @@ if (root) {
     return url.href;
   }
 
+  // The current choice is the filled button with aria-pressed="true".
+  function showMatch() {
+    matchButtons.forEach((button) => {
+      const pressed = button.value === state.match;
+      button.setAttribute('aria-pressed', String(pressed));
+      button.classList.toggle('fill', pressed);
+    });
+  }
+
   function render() {
     query.value = state.query;
     view.value = state.view;
     filters.forEach((filter) => { filter.checked = state.categories.includes(filter.value); });
+    showMatch();
+    const rule = { primary, match: state.match };
     const searching = Boolean(state.query.trim());
     const matches = searching && index ? index.query((search) => {
       const tokens = window.lunr.tokenizer(state.query);
       search.term(tokens, { boost: 10 });
       search.term(tokens, { wildcard: window.lunr.Query.wildcard.TRAILING });
     }) : [];
-    const groups = groupedMatches(documents, state.categories, matches);
+    const groups = groupedMatches(documents, state.categories, matches, rule);
     const selected = searching ? groups.title.map((match) => match.document) :
-      selectedDocuments(documents, state.categories);
+      selectedDocuments(documents, state.categories, null, rule);
     const visible = new Set(selected.map((document) => document.url));
     cards.forEach((card) => { card.hidden = !visible.has(card.dataset.topicUrl); });
     const titlePositions = new Map(groups.title.map((match) => [match.document.url, match.positions]));
@@ -68,17 +95,35 @@ if (root) {
     filterClear.disabled = !state.categories.length;
     bodyResults.replaceChildren();
     for (const match of groups.body) {
-      const item = document.createElement('li');
+      const details = resultDetails(match.document, primary);
       const link = document.createElement('a');
+      link.className = 'ocs__nav-card';
       link.href = contextLink(match.document);
-      const excerpt = document.createElement('p');
+      const file = document.createElement('span');
+      file.className = 'ocs__nav-card-kicker';
+      file.append(wrappable(details.file));
+      file.title = details.path;
+      const title = document.createElement('span');
+      title.className = 'ocs__nav-card-title';
+      title.append(wrappable(match.document.title));
+      const excerpt = document.createElement('span');
+      excerpt.className = 'ocs__text';
       highlight(excerpt, match.document[match.field], match.positions, true);
-      const title = document.createElement('p');
-      title.className = 'topics-browser__text-title';
-      title.textContent = match.document.title;
-      link.append(excerpt, title);
-      item.append(link);
-      bodyResults.append(item);
+      // ocs__status, not ocs__status-pill: pills never wrap, and a long
+      // category like Algorithms-with-Selection-and-Repetition outgrows a phone.
+      const subjects = document.createElement('span');
+      const labels = [
+        ...details.subjects,
+        ...(root.dataset.courseContext === 'true' ? match.document.weeks || [] : []),
+      ];
+      labels.forEach((label) => {
+        const chip = document.createElement('span');
+        chip.className = 'ocs__status';
+        chip.textContent = label;
+        subjects.append(chip, ' ');
+      });
+      link.append(file, title, excerpt, subjects);
+      bodyResults.append(link);
     }
     const count = selected.length + (searching ? groups.body.length : 0);
     status.textContent = count ? `${count} documents` :
@@ -88,6 +133,7 @@ if (root) {
   function update() {
     state = {
       categories: filters.filter((filter) => filter.checked).map((filter) => filter.value),
+      match: state.match,
       query: query.value,
       view: view.value,
     };
@@ -114,6 +160,13 @@ if (root) {
       render();
       query.addEventListener('input', update);
       filters.forEach((filter) => filter.addEventListener('change', update));
+      matchButtons.forEach((button) => {
+        button.disabled = false;
+        button.addEventListener('click', () => {
+          state.match = button.value;
+          update();
+        });
+      });
       view.addEventListener('change', update);
       filterClear.addEventListener('click', () => {
         filters.forEach((filter) => { filter.checked = false; });

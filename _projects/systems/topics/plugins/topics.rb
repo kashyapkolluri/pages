@@ -55,13 +55,15 @@ module Topics
           "title" => document.data["title"].to_s,
           "description" => document.data["description"].to_s,
           "categories" => names.map(&:downcase),
+          "labels" => names,
+          "path" => document.relative_path,
           "url" => document.url,
           "viewUrl" => Topics.view_url(document.url),
           "content" => searchable_content(document.content),
           "weeks" => (document.data["courses"] || {}).to_h.filter_map do |course, value|
             "#{course.upcase} week #{value['week']}" if value.is_a?(Hash) && value["week"]
           end
-        }
+        }.merge(converted_source(document.content))
       end
       site.data["topics_catalog"] = entries
       site.data["topics_categories"] = labels.sort.to_h
@@ -91,6 +93,13 @@ module Topics
     end
 
     private
+
+    # scripts/convert_docx.py names its output after a date and folder, and
+    # keeps the Word file's own name in a comment.
+    def converted_source(content)
+      name = content[/<!-- Converted from: (.+?) -->/, 1]
+      name ? { "source" => name } : {}
+    end
 
     def searchable_content(content)
       text = content.gsub(%r{<(script|style)\b[^>]*>.*?</\1>}mi, " ")

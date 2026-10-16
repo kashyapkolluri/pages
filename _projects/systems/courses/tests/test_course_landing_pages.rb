@@ -59,6 +59,23 @@ Dir.mktmpdir("course-landing-") do |source|
       "player_page" => { "course" => course, "kind" => "week", "sprint" => 1, "week" => 1 }
     ) + "---\n")
   end
+  # Posts for the Blogs pages: one per class, a lesson shared by all four with
+  # the one-class copies split_multi_course_files.py makes, and a pinned
+  # site-wide capstone that names no class.
+  FileUtils.mkdir_p(File.join(source, "_posts"))
+  blog_post = lambda do |file, fields|
+    File.write(File.join(source, "_posts", file), YAML.dump({ "layout" => nil }.merge(fields)) + "---\nPost body\n")
+  end
+  %w[csse csp csa csh].each do |course|
+    blog_post.call("2026-10-01-only-#{course}.md", "title" => "Only #{course.upcase}",
+                   "permalink" => "/only-#{course}/", "courses" => { course => { "week" => 9 } })
+    blog_post.call("2026-10-02-shared-#{course}.md", "title" => "Shared lesson",
+                   "permalink" => "/shared/#{course}/", "courses" => { course => { "week" => 9 } })
+  end
+  blog_post.call("2026-10-02-shared.md", "title" => "Shared lesson", "permalink" => "/shared/",
+                 "courses" => %w[csse csp csa csh].to_h { |course| [course, { "week" => 9 }] })
+  blog_post.call("2026-10-03-capstone.md", "title" => "Site capstone", "permalink" => "/capstone/",
+                 "sticky_rank" => 1)
   site = Jekyll::Site.new(Jekyll.configuration(
     "source" => source, "destination" => File.join(source, "_site"),
     "layouts_dir" => File.join(source, "_layouts"),
@@ -134,6 +151,20 @@ Dir.mktmpdir("course-landing-") do |source|
       assert(!topbar.include?('fa-comments'),
              "#{path} omits the extra topbar chat shortcut")
       if path == "#{course}/blogs/index.html"
+        listed = html.scan(/class="post-link" href="([^"]+)"/).flatten
+        assert(listed == ["/preview/shared/#{course}/", "/preview/only-#{course}/"],
+               "#{path} lists only #{course}'s own posts, newest first; got #{listed.inspect}")
+        assert(html.include?("#{course.upcase} posts: pinned posts first, then the newest."),
+               "#{path} says whose posts it lists")
+        assert(html.include?(%(like capstones, are on the <a href="/preview/navigation/blogs/">site's Blogs page</a>)),
+               "#{path} links to the posts that are not for one class")
+        assert(html.include?('<p class="ocs__split" role="search" aria-label="Search Blogs" data-post-search>') &&
+               html.scan("<li data-post-search-card").size == 2,
+               "#{path} has the search bar over its own posts")
+        html.scan(%r{<script type="module">(.*?)</script>}m).each do |script|
+          _, error, status = Open3.capture3("node", "--input-type=module", "--check", stdin_data: script.first)
+          assert(status.success?, "#{path} module parses: #{error}")
+        end
         assert(breadcrumbs.match?(%r{title="Course home".*href="/preview/navigation/courses/#{course}/">#{course.upcase}</a>.*class="current">Blogs</span>}m),
                "#{path} shows Home, selected course, and Blogs in breadcrumb order")
         assert(html.match?(%r{<a class="ocs__btn[^"]* fill" href="/preview/#{course}/blogs/" aria-current="page"}),
@@ -157,6 +188,11 @@ Dir.mktmpdir("course-landing-") do |source|
              "#{path} retains week chat access in course navigation")
       assert(sidebar.include?('data-lesson-id="/' + course + '/example/"'),
              "#{path} preserves lesson completion identity")
+      week = sidebar[%r{<details data-week-group data-week="1".*?</details>}m].to_s
+      assert(sidebar.scan('<details data-week-group data-week="1"').size == 1 && week.match?(%r{<summary class="sprint-toggle" title="W1: Foundations">\s*<span class="ocs__status-pill ocs__status-pill--good">W1</span>\s*<span class="lesson-title ocs__truncate"><strong>Foundations</strong></span>\s*<span class="ocs__status-pill ocs__status-pill--neutral" data-week-count}),
+             "#{path} shows a week as one row: W pill, then the title cut with an ellipsis, then the count")
+      assert(week.match?(%r{</summary>\s*<div class="ocs__tree">\s*<a href="/preview/#{course}/week-1/"}),
+             "#{path} puts the week's intro first in the week's tree, even with its lessons")
       assert(html.include?('course-mobile-nav"'), "#{path} exposes course pills on mobile")
       assert(!sidebar.include?("href=\"/preview/#{course}/blogs/\""),
              "#{path} omits redundant sidebar Blogs")
@@ -176,4 +212,4 @@ Dir.mktmpdir("course-landing-") do |source|
   end
 end
 
-puts "PASS: all four course landings, shared calendar/chat, sidebar pills, baseurl, existing lessons and mobile navigation"
+puts "PASS: all four course landings, shared calendar/chat, sidebar pills, baseurl, existing lessons, mobile navigation and class-only Blogs with search"

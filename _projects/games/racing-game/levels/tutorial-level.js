@@ -70,13 +70,20 @@ class GameLevelTutorial {
     };
 
 
+    // Finish line on the painted start/finish line; HUD in the grass above the top-left corner.
+    const lap_data = {
+      totalLaps: 3,
+      finishLine: { x: 0.5, top: 0.696, bottom: 0.878 },
+      hudPosition: { x: 0.01, y: 0.02 }
+    };
+
     this.classes = [
       { class: GameEnvBackground, data: background_data },
       { class: Player, data: player_data },
       { class: Player, data: player2_data },
       { class: SplineBarrier, data: barrierData1 },
       { class: SplineBarrier, data: barrierData2 },
-      { class: TimeLapScreen, data: { currentLap: 1, totalLaps: 3 } }
+      { class: TimeLapScreen, data: lap_data }
     ];
   }
 }

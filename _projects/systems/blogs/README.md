@@ -14,7 +14,7 @@ conditional adapter rather than owning generic document layouts.
 | --- | --- |
 | `layouts/` | `_layouts/` (post, blogs, notebook, study/capture, blog-reader) |
 | `_includes/` | `_includes/` (catalog, card, reader, submission UI) |
-| `js/` | Existing `assets/js/lesson-*.js` and `assets/js/lessonbase*.js` paths |
+| `js/` | Existing `assets/js/lesson-*.js` and `assets/js/lessonbase*.js` paths; `assets/js/blogs/post-search.js` |
 | `sass/` | Existing `_sass/open-coding/{blogs,lesson-player}.scss` paths |
 | `tests/` | Source-based tests, not published |
 
@@ -26,8 +26,15 @@ It has no local npm manifest or custom Makefile.
 
 - `layout: post`: full document, with existing Submission/Runner integrations.
 - `layout: blogs`: catalog with ordinary full-page links; preserves existing behavior.
+  `post_filter: <flag>` lists only the posts whose front matter sets that flag to
+  `true`. `post_search: true` adds a search bar built from OCS components: typing
+  hides the cards whose title and description don't have every query word, marks
+  each word with `<mark>` where it appears in a card's title or description, keeps
+  the catalog's order, and keeps the query in `?q=` so it can be shared.
 - `layout: blog-reader`: optional standalone catalog with embedded reading.
 - `{% include blog-reader.html %}`: the same reader hosted by a course page.
+  `course=<course>` lists only posts whose `courses` names that course alone,
+  and `search=true` adds the search bar; a course's Blogs page passes both.
 - `layout: notebook`, `lessonbase`, `lessonbasecapture`: existing viewer variants.
 
 The reader preserves `?post=` history, list/reader switching, relative links and
@@ -60,6 +67,7 @@ make -C _projects/systems/blogs assets
 make -C _projects/systems/blogs build
 bundle exec ruby scripts/test_blogs_system.rb
 bundle exec ruby scripts/test_blog_catalog.rb
+node --test tests/post_search.test.mjs
 bundle exec ruby scripts/test_course_landing_pages.rb
 ```
 

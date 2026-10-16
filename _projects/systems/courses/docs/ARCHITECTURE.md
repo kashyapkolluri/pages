@@ -49,9 +49,11 @@ Blogs - reusable document and discovery system
 └── Composed Chat and Calendar views
 ```
 
-A week's documents are selected by course/week frontmatter. They are not the
-same collection as the course's Blogs catalog, which displays posts
-from across the site. Both can reference the same underlying Jekyll document.
+A week's documents are selected by course/week frontmatter. The course's
+Blogs catalog is a different collection: every post whose `courses` names that
+course alone, whatever its week, with a search bar over them. Posts for no
+single class, such as capstones, are in the site-wide catalog at
+`/navigation/blogs/`. Both can reference the same underlying Jekyll document.
 Authored lessons stay in their registered lesson projects, notebooks, or DOCX;
 neither Courses nor Blogs takes ownership of that content.
 

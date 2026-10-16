@@ -4,6 +4,7 @@
     { "source": "layouts", "destination": "_layouts" },
     { "source": "plugins", "destination": "_plugins" },
     { "source": "data", "destination": "_data" },
+    { "source": "data/sprint-intro", "destination": "_includes/projects/courses/sprint-intro" },
     { "source": "navigation/csa.md", "destination": "_posts/projects/courses/2026-09-12-csa.md" },
     { "source": "navigation/csp.md", "destination": "_posts/projects/courses/2026-09-12-csp.md" },
     { "source": "navigation/csse.md", "destination": "_posts/projects/courses/2026-09-12-csse.md" },

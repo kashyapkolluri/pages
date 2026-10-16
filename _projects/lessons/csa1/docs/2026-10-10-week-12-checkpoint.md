@@ -8,7 +8,7 @@ lesson_type: review
 checkpoint_sprint: 3
 challenge_submit: false
 checkpoint_links:
-  - {title: Sprint 3 capstone objectives and evaluation evidence, url: /csa/sprint3/objectives}
+  - {title: Sprint 3 intro and evaluation evidence, url: /csa/sprint-3/}
   - {title: OCS Assignments System capstone, url: /capstone/submissions/}
   - {title: Gamification and onboarding capstone, url: /capstone/toolchain-trail/}
   - {title: Admin and security capstone, url: /capstone/ocs-admin-security/}

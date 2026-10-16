@@ -4,6 +4,7 @@ title: GameBuilder Docs
 description: Lessons and reference materials for building games with GameBuilder.
 permalink: /gamebuilder/docs/
 post_filter: game_docs
+post_search: true
 hide: true
 toc: false
 ---

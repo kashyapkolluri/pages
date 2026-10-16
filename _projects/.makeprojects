@@ -30,6 +30,7 @@ games/racing-game:dev
 # Lessons
 lessons/ap-frq-simulator
 lessons/cpt-concepts
+lessons/flask:dev
 lessons/game-lessons
 lessons/parallelAndComputinglesson
 lessons/robot-logic-game

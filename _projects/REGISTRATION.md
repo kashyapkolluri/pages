@@ -121,12 +121,16 @@ authored Markdown pages belong directly in `docs/`. Include the original year or
 variant in a filename when flattening would create a collision. Historical
 full-stack Markdown exports without notebook originals are retained as references.
 
-CSA week-9 capstone objectives are authored in
-`lessons/csa1/notebooks/2024-10-29-sprint3_plan.ipynb`, retaining
-`/csa/sprint3/objectives`. The historical CSA version used week 8; the restored
-version deliberately uses week 9 and does not replace the separate CSSE source.
-It combines current capstone portfolios with individual design, implementation,
-integration, testing, and reflection evidence across three trimesters.
+CSA capstone planning is authored in
+`systems/courses/data/sprint-intro/csa-sprint-3.md` and selected by CSA Sprint 3's
+`direction_include`. It renders at `/csa/sprint-3/`, using the shared OCS heading
+and table grammar, rather than as a separate week-9 lesson. The old
+`/csa/sprint3/objectives` URL is an unscheduled redirect in `lessons/csa1/docs/`.
+The intro preserves the four capstone portfolios, individual design,
+implementation, integration and testing evidence, and the original ten-point
+assignment/five-point skills evaluation. Formal CS112/CS113 alignment begins
+in Sprint 4; this does not move all advanced CS113 instruction into that sprint
+or turn project participation into mastery or college credit.
 Sprint 2-4 titles and descriptions in `_data/csa.yml` explain the progression
 from preparation through week 8 to sustained capstones in week 9 and deeper
 CSA2 integration. Preserve the sprint boundaries and lesson weeks when updating

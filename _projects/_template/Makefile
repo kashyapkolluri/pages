@@ -247,7 +247,14 @@ watch:
 ###########################################
 
 docs:
-	@if [ -d "docs" ]; then \
+	@if [ -f "distribution.json" ]; then \
+		MANAGED_DOCS=$$(ruby -rjson -e 'puts JSON.parse(File.read("distribution.json")).fetch("files").any? { |entry| entry["source"] == "docs" }') || exit 1; \
+	else \
+		MANAGED_DOCS=false; \
+	fi; \
+	if [ "$$MANAGED_DOCS" = "true" ]; then \
+		ruby "$(WORKSPACE_ROOT)/scripts/publish_project.rb" publish "$(PROJECT_SRC)" "$(abspath $(WORKSPACE_ROOT))"; \
+	elif [ -d "docs" ]; then \
 		echo "📚 Publishing $(PROJECT_NAME) documentation..."; \
 		mkdir -p $(DOCS_DEST); \
 		for doc in docs/*.md docs/*.html; do \

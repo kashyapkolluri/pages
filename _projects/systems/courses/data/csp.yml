@@ -128,6 +128,7 @@ Sprint2:
 
 Sprint3:
   title: "Building a Full Stack Web Application"
+  direction_include: projects/courses/sprint-intro/csp-sprint-3.md
   description: >
     During this Sprint, teams will apply their Full Stack knowledge to build
     a web application for a real audience and purpose. Each team will develop
@@ -141,24 +142,26 @@ Sprint3:
   end: 12
 
   9:
-    theme: "Interactive Features and Data"
+    theme: "Ideate, Design"
     goals:
-      - "Forms: Input Handling and Validation"
-      - "Client-Side State: localStorage and User Preferences"
+      - "Testing: End-to-End Pipeline"
+      - "Definition: Planning Team Contributions"
       - "APIs: Fetching and Working with Application Data"
+      - "Easy API: Read Jokes Handlers and File-Backed Data Calls"
 
   10:
-    theme: "Integration and Testing"
+    theme: "Build, Integrate, Test"
     goals:
-      - "Integration: Combining Team Contributions"
+      - "User API: Authentication, REST Client, and User Model Calls"
+      - "API Interfaces: Requests, Responses, Permissions, and Errors"
+      - "Forms: Input Handling and Validation"
       - "User Experience: UX Refinement"
-      - "Testing: End-to-End Application Testing"
 
   11:
-    theme: "Project Polish and Presentation"
+    theme: "Polish, Test, Document"
     goals:
+      - "Microblog API: Filtering, Validation, and Model Call Tracing"
       - "Code Review and Debugging"
-      - "Documentation: README, Setup, and Usage"
       - "N@tM Presentation Practice"
 
   12:
